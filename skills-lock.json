@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "quicknode-skill": {
+      "source": "quiknode-labs/blockchain-skills",
+      "sourceType": "github",
+      "skillPath": "skills/quicknode-skill/SKILL.md",
+      "computedHash": "def803d52fefaa25b5d5a6a783fd58f4582ffcd7a965e05eaf813ca9f635d20b"
+    }
+  }
+}
