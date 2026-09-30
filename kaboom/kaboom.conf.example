@@ -1,0 +1,18 @@
+# kaboom optional config file
+#
+# Copy this file to "kaboom.conf" in the same directory as kaboom.sh
+# (or wherever $KABOOM_PATH points) to override any default. Anything
+# left commented out keeps kaboom's built-in default.
+
+# --- Hydra tuning ---
+#HYDRA_THREADS=8
+
+# --- Parallel target scans (1 = sequential, current default) ---
+#PARALLEL_JOBS=4
+
+# --- Wordlists (examples; any USERLIST_HYDRA_* / PASSLIST_HYDRA_* can be overridden) ---
+#PASSLIST_HYDRA="$KABOOM_PATH/rockyou.txt"
+#USERLIST_HYDRA_SSH="$KABOOM_PATH/ssh_users.txt"
+
+# --- Web wordlists ---
+#HTTP_WORDLIST="$KABOOM_PATH/big_wordlist.txt"

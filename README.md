@@ -9,7 +9,8 @@
 ## About
 Kaboom is an automatism for penetration tests. It performs several tasks for the first two phases of the test: information gathering and vulnerability assessment.
 All informations collected are saved into a directory hierarchy very
-simple to browse (also in case of multiple targets).
+simple to browse (also in case of multiple targets), and can optionally be
+consolidated into a single HTML report per target.
 
 ## Details
 Kaboom performs several tasks:
@@ -17,19 +18,33 @@ Kaboom performs several tasks:
    1. **Information Gathering**
 
         * Port scan (**Nmap**)
-        * Web resources enumeration (**Dirb**)
+        * Web resources enumeration (**Dirb**, **Gobuster**)
 
    2. **Vulnerability assessment**
 
-        * Web vulnerability assessment (**Nikto** - **Dirb**)
+        * Web vulnerability assessment (**Nikto** - **Dirb** - **Gobuster** - **Whatweb**)
+        * TLS/SSL assessment (**Sslscan**)
+        * SMB enumeration (**Enum4linux**)
         * Vulnerability assessment (**Nmap** - **Metasploit**)
         * Automatic Vulnerabilities research (**Searchsploit** - **Metasploit**)
         * Dictionary Attacks (**Hydra**)
 
             * SSH
-            * POP3
-            * IMAP
+            * POP3 / POP3S
+            * IMAP / IMAPS
             * RDP
+            * MySQL
+            * SMB
+            * FTP
+            * Telnet
+            * VNC
+            * PostgreSQL
+            * MSSQL
+            * SNMP
+
+   3. **Reporting**
+
+        * Consolidated per-host HTML report (open ports, CVEs, known exploits, cracked credentials)
 
 ## Usage
 Kaboom can be used in two ways:
@@ -59,9 +74,11 @@ _**For more screenshots see the relative [directory](https://github.com/Leviatha
 <p align="center"><img src="https://github.com/Leviathan36/kaboom/blob/master/kaboom_images/dir_hierarchy.PNG" width="80%" height="auto"></p>
 
 ## Customization
-It's possible to customize the script by changing the value of variables at the beginning of the file.
-In particularly you can choose the wordlists used by Hydra and Dirb, specify another Metasploit scan script and
-change the output file names.
+It's possible to customize the script by changing the value of variables at the beginning of the file,
+or by copying `kaboom.conf.example` to `kaboom.conf` (in the same directory as `kaboom.sh`) and overriding
+only what you need there — it's sourced automatically if present.
+You can choose the wordlists used by Hydra, Dirb and Gobuster, tune Hydra's thread count, control how many
+targets are scanned in parallel, specify another Metasploit scan script and change the output file names.
 
 ```bash
 #KABOOM_PATH=''		# THE PATH COULD BE SET HERE INSTEAD OF IN BASHRC FILE
@@ -76,6 +93,11 @@ USERLIST_HYDRA_POP3="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_IMAP="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_RDP="$KABOOM_PATH/user_wordlist_short.txt"
 USERLIST_HYDRA_SMB="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_MYSQL="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_FTP="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_TELNET="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_POSTGRESQL="$KABOOM_PATH/user_wordlist_short.txt"
+USERLIST_HYDRA_MSSQL="$KABOOM_PATH/user_wordlist_short.txt"
 
 # PASSWORD WORDLISTS
 PASSLIST_HYDRA="$KABOOM_PATH/fasttrack.txt"
@@ -84,8 +106,15 @@ PASSLIST_HYDRA_POP3="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_IMAP="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_RDP="$PASSLIST_HYDRA"
 PASSLIST_HYDRA_SMB="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_MYSQL="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_FTP="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_TELNET="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_VNC="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_POSTGRESQL="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_MSSQL="$PASSLIST_HYDRA"
+PASSLIST_HYDRA_SNMP="$PASSLIST_HYDRA"
 
-# DIRB WORDLISTS
+# DIRB / GOBUSTER WORDLISTS
 HTTP_WORDLIST="$KABOOM_PATH/custom_url_wordlist.txt"
 HTTP_EXTENSIONS_FILE="$KABOOM_PATH/custom_extensions_common.txt"
 
@@ -96,18 +125,27 @@ METASPLOIT_SCAN_SCRIPT='./metasploit_scan_script'
 SCRIPT_SYN='script-syn'
 UDP='udp'
 SYN='syn'
+
+# HYDRA THREADS (concurrent connections per dictionary attack)
+HYDRA_THREADS=4
+
+# PARALLEL TARGET SCANS (how many hosts to scan concurrently; 1 = sequential, default)
+PARALLEL_JOBS=1
 ```
 
 ## New features
-* _**Customization**_ (see above)
+* _**Customization**_ (see above), including an optional `kaboom.conf` file
 * _**Multi-target specification**_
     * You can specify up to 254 hosts (C-class network)
+    * _**Optional parallel scanning**_ across those hosts (`PARALLEL_JOBS`)
 * _**New CLI interface**_
 * _**More powerfull Nmap scan**_
 * _**Better directory hierarchy**_
 * _**Automatic research of Metasploit module associated with CVE code found**_
 * _**Recognition of services exposed on not canonical ports**_ (ex: http on 7000)
 * _**Print out and save credentials found**_
+* _**Consolidated HTML report**_ per target (`-p r`), summarizing open ports, CVEs, known exploits and cracked credentials
+* _**Startup dependency check**_ that warns about any missing required tool instead of silently skipping its scans
 
 
 ## Twin Brother
