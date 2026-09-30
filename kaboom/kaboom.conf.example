@@ -16,3 +16,19 @@
 
 # --- Web wordlists ---
 #HTTP_WORDLIST="$KABOOM_PATH/big_wordlist.txt"
+
+# --- Clean the local per-host output directory before each fresh scan of it ---
+# (the persistent SQLite findings database is NEVER affected by this - only
+#  the working/report files on disk for that host are cleared)
+#CLEAN_BEFORE_SCAN='no'
+
+# --- Web injection/exploitation phase ('w') ---
+#SQLMAP_BIN='sqlmap'
+#SQLMAP_LEVEL=3
+#SQLMAP_RISK=2
+#COMMIX_BIN='commix'
+#DOTDOTPWN_BIN='dotdotpwn.pl'
+#NUCLEI_BIN='nuclei'
+#NUCLEI_TAGS='rce,cve,sqli,lfi,rfi,traversal'
+#NUCLEI_SEVERITY='critical,high,medium,low'
+#CRAWL_DEPTH=3

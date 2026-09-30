@@ -42,9 +42,20 @@ Kaboom performs several tasks:
             * MSSQL
             * SNMP
 
-   3. **Reporting**
+   3. **Web injection & exploitation testing**
 
-        * Consolidated per-host HTML report (open ports, CVEs, known exploits, cracked credentials)
+        * SQL injection (**Sqlmap**)
+        * OS command injection (**Commix**)
+        * Path/directory traversal (**Dotdotpwn**)
+        * RCE / known-CVE detection (**Nuclei**)
+
+   4. **Reporting & persistence**
+
+        * Consolidated per-host HTML report (open ports, CVEs, known exploits, cracked credentials, web injection findings)
+        * Every finding (ports, vulnerabilities, credentials, web injection results) is also written to a
+          **persistent SQLite database** (`kaboom.db` in the report path), kept across every run against every target
+        * The local per-host output directory is wiped before each fresh scan of that host so results never mix with a
+          stale previous run — the database is never touched by this and keeps the full history
 
 ## Usage
 Kaboom can be used in two ways:
@@ -131,6 +142,21 @@ HYDRA_THREADS=4
 
 # PARALLEL TARGET SCANS (how many hosts to scan concurrently; 1 = sequential, default)
 PARALLEL_JOBS=1
+
+# CLEAN THE LOCAL TEST AREA BEFORE EACH FRESH SCAN OF A HOST
+# (the persistent database below is never affected by this)
+CLEAN_BEFORE_SCAN='yes'
+
+# WEB INJECTION / EXPLOITATION TOOLS (phase 'w')
+SQLMAP_BIN='sqlmap'
+SQLMAP_LEVEL=2
+SQLMAP_RISK=1
+COMMIX_BIN='commix'
+DOTDOTPWN_BIN='dotdotpwn.pl'
+NUCLEI_BIN='nuclei'
+NUCLEI_TAGS='rce,cve,sqli,lfi,rfi,traversal'
+NUCLEI_SEVERITY='critical,high,medium'
+CRAWL_DEPTH=2
 ```
 
 ## New features
@@ -144,8 +170,20 @@ PARALLEL_JOBS=1
 * _**Automatic research of Metasploit module associated with CVE code found**_
 * _**Recognition of services exposed on not canonical ports**_ (ex: http on 7000)
 * _**Print out and save credentials found**_
-* _**Consolidated HTML report**_ per target (`-p r`), summarizing open ports, CVEs, known exploits and cracked credentials
+* _**Consolidated HTML report**_ per target (`-p r`), summarizing open ports, CVEs, known exploits, cracked credentials and web injection findings
 * _**Startup dependency check**_ that warns about any missing required tool instead of silently skipping its scans
+* _**Web injection/exploitation testing**_ (`-p w`): SQLi, OS command injection, path traversal, and RCE/CVE detection
+* _**Persistent SQLite findings database**_ (`kaboom.db`) recording every port, vulnerability, credential and web
+  finding across every run — nothing is ever overwritten, only appended to
+* _**Automatic clean-up of the local test area**_ before each fresh scan of a host, so stale files from a previous
+  run can't leak into a new one (the persistent database is unaffected)
+
+## Security note
+The web injection/exploitation phase (`-p w`) actively tests for and confirms SQL injection, OS command injection,
+path traversal and known RCE/CVE conditions using industry-standard tools (Sqlmap, Commix, Dotdotpwn, Nuclei). Like
+every other phase in Kaboom, **only run it against systems you own or are explicitly authorized to test.**
+Kaboom does not install backdoors, plant persistence mechanisms, or otherwise maintain access on a target — it is a
+detection/confirmation tool, not an implant framework.
 
 
 ## Twin Brother
