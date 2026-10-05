@@ -31,6 +31,15 @@ else
   echo "  all tools present — agents can run live against in-scope lab targets."
 fi
 
+# Guardrail self-test (fast, no network/tools needed) — flags a broken gate early.
+if [ -x "tests/redteam_test.sh" ]; then
+  if tests/redteam_test.sh >/dev/null 2>&1; then
+    echo "  guardrails: redteam.sh self-test PASSED."
+  else
+    echo "  guardrails: WARNING — redteam.sh self-test FAILED. Run ./tests/redteam_test.sh"
+  fi
+fi
+
 # Scope file reminder (never print its contents — may hold target/auth details).
 if [ -f "ENGAGEMENT_SCOPE.yaml" ]; then
   echo "  scope: ENGAGEMENT_SCOPE.yaml found."
