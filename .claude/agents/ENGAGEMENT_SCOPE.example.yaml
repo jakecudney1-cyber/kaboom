@@ -1,0 +1,29 @@
+# Engagement scope — copy to ENGAGEMENT_SCOPE.yaml and fill in before running any agent.
+# Every red-team agent in this suite refuses to act on anything not covered here.
+
+engagement:
+  name: "home-lab-test"
+  owner: "me"                      # you must own or have written authorization for all targets
+  authorization: "self-owned home lab"   # e.g. "self-owned", "written client authz dated YYYY-MM-DD"
+  authorized_by: "jayc33879@gmail.com"
+  date: "2026-10-05"
+
+# Only RFC1918 / lab ranges should appear here. Public IPs you do not own are forbidden.
+targets:
+  in_scope:
+    - "192.168.56.0/24"            # e.g. an isolated VirtualBox host-only lab net
+    # - "10.0.50.10"
+  out_of_scope:
+    - "192.168.56.1"               # e.g. the host / gateway you don't want touched
+
+rules_of_engagement:
+  allow_active_scanning: true      # nmap, dirb, nikto
+  allow_vuln_assessment: true      # nmap NSE, searchsploit mapping
+  allow_credential_testing: false  # hydra dictionary attacks — opt in explicitly
+  allow_exploitation: false        # launching exploits — keep false unless you mean it
+  max_scan_rate: "normal"          # polite | normal | aggressive
+  time_window: "anytime"           # lab is yours; set a window if you want
+  stop_on_service_disruption: true # back off if a host becomes unresponsive
+
+output:
+  report_dir: "./reports"
