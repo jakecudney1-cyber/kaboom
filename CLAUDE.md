@@ -20,8 +20,11 @@ test**. Every component gates on `ENGAGEMENT_SCOPE.yaml`:
 
 - Targets must be RFC1918 / loopback / lab addresses. Public or third-party
   addresses are **refused**.
-- Exploitation and credential testing are **off by default** and require both a
-  scope-file opt-in and explicit operator confirmation.
+- Credential testing and exploitation are **off by default** and require both a
+  scope-file opt-in and explicit operator confirmation. When enabled against an
+  isolated lab the operator owns, they run **for real** (hydra actually tests
+  creds; Metasploit actually exploits) — that's the point, and the real results
+  are what teach detection and prevention.
 - No exfiltration, persistence, or lateral movement by default.
 
 If a request would test something outside the scope file, or something the
@@ -36,11 +39,12 @@ operator doesn't clearly control, **stop and ask** — don't proceed.
   web-enum.md              #   dirb + nikto web enumeration
   vuln-assessor.md         #   searchsploit + safe NSE + CVE->MSF mapping
   cred-tester.md           #   hydra weak-cred tests (GATED, off by default)
+  exploit-operator.md      #   Metasploit exploitation (GATED HARD, off by default)
   report-writer.md         #   compiles REPORT.md + findings.csv
   ENGAGEMENT_SCOPE.example.yaml
 .claude/hooks/check-tools.sh   # SessionStart: reports tool + scope availability
 .claude/settings.json          # wires the SessionStart hook
-redteam.sh                 # phase runner: recon|web|vuln|creds|report|all|scope
+redteam.sh                 # phase runner: recon|web|vuln|creds|exploit|report|all|scope
 tests/redteam_test.sh      # guardrail tests for redteam.sh (runnable anywhere)
 ENGAGEMENT_SCOPE.yaml       # operator-created, git-ignored (your targets/authz)
 reports/                   # scan output, git-ignored

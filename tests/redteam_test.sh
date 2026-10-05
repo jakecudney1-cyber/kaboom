@@ -77,6 +77,19 @@ echo "== test: vuln uses only safe NSE categories (no exploit scripts) =="
 out="$(run "$LAB" vuln)"
 grep -q "script 'default,safe,vuln'" <<<"$out" && ! grep -q "script exploit" <<<"$out" && ok "vuln NSE is non-intrusive" || bad "vuln NSE wrong: $out"
 
+echo "== test: exploit gate OFF when allow_exploitation is false =="
+out="$(run "$LAB" exploit)"
+grep -q "allow_exploitation is not true" <<<"$out" && ok "exploit skipped when disabled" || bad "exploit ran while disabled: $out"
+
+echo "== test: exploit needs confirmation even when enabled =="
+EXP="$TMP/exploit.yaml"; sed 's/allow_exploitation: false/allow_exploitation: true/' "$LAB" > "$EXP"
+out="$(run "$EXP" exploit)"
+grep -q "CONFIRM_EXPLOIT=yes" <<<"$out" && ! grep -q "exploitation CONFIRMED" <<<"$out" && ok "exploit requires confirmation" || bad "exploit ran without confirmation: $out"
+
+echo "== test: confirmed exploit writes a template rc (no module => no launch) =="
+out="$(SCOPE_FILE="$EXP" CONFIRM_EXPLOIT=yes bash "$RUNNER" exploit 2>&1)"
+grep -q "wrote template" <<<"$out" && ok "confirmed exploit emits template, no auto-module" || bad "confirmed exploit behavior wrong: $out"
+
 echo
 echo "RESULT: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

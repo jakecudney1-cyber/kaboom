@@ -69,11 +69,14 @@ ENGAGEMENT_SCOPE.yaml"). It is the orchestrator and entry point. It will:
    | Web | `web-enum` | dirb + nikto on web services | `allow_active_scanning` |
    | Vuln | `vuln-assessor` | searchsploit + safe NSE + CVE→MSF mapping (analysis only) | `allow_vuln_assessment` |
    | Creds | `cred-tester` | hydra weak-credential tests | `allow_credential_testing` **+** in-session confirmation |
+   | Exploit | `exploit-operator` | Metasploit against confirmed findings (real) | `allow_exploitation` **+** in-session confirmation |
    | Report | `report-writer` | compiles `REPORT.md` + `findings.csv` | — |
 
-   Credential testing is skipped (and noted) unless enabled. Exploitation is
-   never auto-run — even with `allow_exploitation: true`, `redteam-lead`
-   coordinates it manually with your in-session confirmation.
+   Credential testing and exploitation are skipped (and noted) unless enabled.
+   When you enable them on your own isolated lab they run **for real** — that's
+   how you get the detection/prevention lessons. Exploitation never fires by
+   accident: it needs `allow_exploitation: true`, your in-session confirmation
+   (and `CONFIRM_EXPLOIT=yes` for the runner), and a module you choose.
 
 ### (b) Script-driven — via `./redteam.sh`
 
@@ -89,8 +92,9 @@ Subcommands:
 | `./redteam.sh web` | dirb, nikto | dirb directory enum + nikto scan per host (skips CIDRs) → `dirb_80.txt`, `nikto_80.txt` | `allow_active_scanning: true` |
 | `./redteam.sh vuln` | nmap NSE, searchsploit | `--script 'default,safe,vuln'` NSE (no exploit scripts) → `nse.*`; prints searchsploit next-steps | `allow_vuln_assessment: true` |
 | `./redteam.sh creds` | hydra | weak-cred check, **ssh only by default**, `-t 4 -f` → `hydra_ssh.txt` | `allow_credential_testing: true` |
+| `./redteam.sh exploit` | msfconsole | per-host Metasploit `.rc` (you fill the module) → `exploit_output.txt`; **not** in `all` | `allow_exploitation: true` **+** `CONFIRM_EXPLOIT=yes` |
 | `./redteam.sh report` | — | writes `REPORT.md` skeleton + `findings.csv` header, lists artifacts | — |
-| `./redteam.sh all` | all above | runs recon → web → vuln → creds → report in sequence | per-phase gates |
+| `./redteam.sh all` | recon→web→vuln→creds→report | runs those five in sequence (exploit is intentionally excluded) | per-phase gates |
 | `./redteam.sh scope` | — | prints parsed scope and exits | — |
 
 **Recommended order:** `recon` → `web` → `vuln` → `creds` → `report` (which is
@@ -143,10 +147,14 @@ sensitive.
   (the `cred-tester` agent double-gates on both; the script gate is the YAML
   flag). Start with small dictionaries and `ssh` only; the runner defaults to
   ssh — add `pop3`/`imap`/`rdp`/`smb` deliberately.
-- **Exploitation is never auto-run.** Even with `allow_exploitation: true`, the
-  runner never launches exploits (it only prints a note), and agents only
-  *map* CVEs to Metasploit modules. Launching anything is manual and requires
-  explicit in-session operator confirmation coordinated by `redteam-lead`.
+- **Exploitation is real but never fires by accident.** To exploit, set
+  `allow_exploitation: true`, then run `CONFIRM_EXPLOIT=yes ./redteam.sh exploit`
+  (or confirm in-session via `redteam-lead` → `exploit-operator`). On first run it
+  writes a per-host `reports/<host>/exploit.rc` template; **you** add the
+  Metasploit module (chosen from the vuln-assessment) and `RHOSTS`/`LHOST`, then
+  rerun — it won't launch an `.rc` that has no `use` line. It targets named
+  RFC1918 hosts only (never CIDRs) and is excluded from `all`. For each hit,
+  capture what a defender would see (logs, alerts) — that's the prevention lesson.
 - **Account-lockout caution:** testing `rdp`/`smb` against AD can lock out
   accounts. Warn first, keep parallelism low (`-t 4` or lower), and stop
   immediately on signs of lockout or service disruption

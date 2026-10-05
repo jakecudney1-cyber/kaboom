@@ -19,6 +19,7 @@ range.
 | `web-enum` | info gathering | Web path enumeration + web vuln scan (dirb, nikto) | scan-only |
 | `vuln-assessor` | vuln assessment | CVE research + NSE + CVE→MSF module mapping | analysis-only, no exploit |
 | `cred-tester` | vuln assessment | Weak/default credential tests (hydra) | **disabled** unless opted in |
+| `exploit-operator` | exploitation | Launches Metasploit modules against confirmed findings | **disabled** unless opted in + confirmed |
 | `report-writer` | reporting | Compiles evidence into REPORT.md + findings.csv | synthesis-only |
 
 ## Setup
@@ -53,7 +54,9 @@ lab for live results.
 ## Guardrails (built into every agent)
 
 - Act only on `in_scope` targets; refuse public/third-party addresses.
-- No exploitation unless `allow_exploitation: true` **and** you confirm in-session.
 - No credential testing unless `allow_credential_testing: true` **and** confirmed.
+- No exploitation unless `allow_exploitation: true` **and** you confirm in-session
+  (runner also requires `CONFIRM_EXPLOIT=yes`). Then it runs for real against your
+  own lab hosts — capture the detection/prevention lessons from each hit.
 - Honor `stop_on_service_disruption`; back off on lockout/unresponsiveness.
 - No exfiltration, persistence, or lateral movement by default.

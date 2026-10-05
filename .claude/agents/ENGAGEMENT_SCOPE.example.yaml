@@ -20,7 +20,9 @@ rules_of_engagement:
   allow_active_scanning: true      # nmap, dirb, nikto
   allow_vuln_assessment: true      # nmap NSE, searchsploit mapping
   allow_credential_testing: false  # hydra dictionary attacks — opt in explicitly
-  allow_exploitation: false        # launching exploits — keep false unless you mean it
+  allow_exploitation: false        # launch real exploits (Metasploit) against lab
+                                   # hosts. Fine in an isolated lab you own; set
+                                   # true, then run with CONFIRM_EXPLOIT=yes.
   max_scan_rate: "normal"          # polite | normal | aggressive
   time_window: "anytime"           # lab is yours; set a window if you want
   stop_on_service_disruption: true # back off if a host becomes unresponsive
