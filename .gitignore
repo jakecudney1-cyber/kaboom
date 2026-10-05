@@ -1,0 +1,5 @@
+# Red-team engagement scope — may contain target/authorization details; keep local
+ENGAGEMENT_SCOPE.yaml
+
+# Scan output / reports
+reports/
