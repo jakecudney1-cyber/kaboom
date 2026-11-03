@@ -1,0 +1,30 @@
+# Engagement scope — copy to ENGAGEMENT_SCOPE.yaml and fill in before running any agent.
+# Every red-team agent and redteam.sh refuses to act on anything not covered here.
+
+engagement:
+  name: "home-lab-test"
+  owner: "me"                      # you must own or have written authorization for all targets
+  authorization: "self-owned home lab"
+  authorized_by: "jayc33879@gmail.com"
+  date: "2026-11-02"
+
+# Only RFC1918 / lab ranges should appear here. Public IPs you do not own are forbidden.
+targets:
+  in_scope:
+    - "192.168.56.0/24"            # e.g. an isolated host-only lab net
+  out_of_scope:
+    - "192.168.56.1"               # host / gateway you don't want touched
+
+rules_of_engagement:
+  allow_active_scanning: true      # kaboom phase i (nmap/dirb/gobuster/whatweb/sslscan/enum4linux)
+  allow_vuln_assessment: true      # kaboom phase v (nikto/searchsploit/NSE)
+  allow_credential_testing: false  # kaboom phase d (hydra dictionary attacks) — opt in explicitly
+  allow_exploitation: false        # kaboom phase w (sqlmap/commix/nuclei) + Metasploit host exploits.
+                                   # Fine in an isolated lab you own; set true, then run with
+                                   # CONFIRM_EXPLOIT=yes.
+  max_scan_rate: "normal"          # polite | normal | aggressive  -> nmap -T2/-T3/-T4
+  time_window: "anytime"
+  stop_on_service_disruption: true
+
+output:
+  report_dir: "./reports"          # kaboom writes per-host dirs + a shared kaboom.db here
